@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import Button from "./components/Buttons";
 
@@ -8,14 +8,20 @@ function App() {
     Spain: "Madrid",
     Italy: "Rome",
     France: "Paris",
+    Bucharest: "Hungary",
   };
   // data can be replaced with other examples
 
-  const arr = Object.keys(cities);
-  const arr1 = Object.values(cities);
-  const location = shuffle(arr.concat(arr1));
+  const [choices, setChoices] = useState([]);
+  const [reset, setReset] = useState(false);
 
-  const [choices, setChoices] = useState(makeHash(location));
+  useEffect(() => {
+    const arr = Object.keys(cities);
+    const arr1 = Object.values(cities);
+    const location = shuffle(arr.concat(arr1));
+    setChoices(makeHash(location));
+  }, [reset]);
+
   // console.log(choices);
 
   function makeHash(arr) {
@@ -23,7 +29,7 @@ function App() {
       return {
         id: x,
         text: x,
-        clicked: false,
+        clicked: 0,
       };
     });
   }
@@ -31,33 +37,54 @@ function App() {
   function setAllFalse() {
     setChoices((prev) =>
       prev.map((x) => {
-        return { ...x, clicked: false };
+        return { ...x, clicked: 0 };
       })
     );
   }
 
   const check = [];
   for (let i = 0; i < choices.length; i++) {
-    if (choices[i].clicked === true) {
+    if (choices[i].clicked === 1) {
       check.push(choices[i].text);
     }
   }
+
   if (check.length === 2) {
     const val = check.pop();
     const val1 = check.pop();
     if (cities[val] === val1 || cities[val1] === val) {
-      const newArr = choices.filter((x) => x.clicked === false);
+      const newArr = choices.filter((x) => x.clicked === 0);
       setChoices(newArr);
+    } else {
+      setChoices((prev) =>
+        prev.map((x) => {
+          if (x.clicked === 1) return { ...x, clicked: 2 };
+          else return { ...x };
+        })
+      );
     }
-    setAllFalse(cities);
   }
 
   function toggleButton(id) {
+    let counter = 0;
+    for (let i = 0; i < choices.length; i++) {
+      if (choices[i].clicked === 2) {
+        counter++;
+      }
+    }
+    if (counter === 2) {
+      counter = 0;
+      setAllFalse();
+    }
     setChoices((prevState) =>
       prevState.map((x) => {
-        return id === x.id ? { ...x, clicked: !x.clicked } : x;
+        return id === x.id ? { ...x, clicked: 1 } : x;
       })
     );
+  }
+
+  function playAgain() {
+    setReset(!reset);
   }
 
   function shuffle(array) {
@@ -88,6 +115,7 @@ function App() {
   return (
     <div className='App'>
       <p>{elements}</p>
+      <button onClick={playAgain}>Reset</button>
     </div>
   );
 }
